@@ -21,5 +21,6 @@
 .DS_Store
 Thumbs.db
 
-# Ignore sensitive configuration
-application.yml
+# Ignore sensitive configuration files (local development only)
+application-local.yml
+*.local.yml
