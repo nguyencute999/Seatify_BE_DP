@@ -1,4 +1,7 @@
-name: Build and deploy Gradle app to Azure Web App - seatify-backend
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy JAR app to Azure Web App - seatify-backend
 
 on:
   push:
@@ -10,40 +13,35 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Set up Java version
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-          cache-dependency-path: 'backend/build.gradle'
+          distribution: 'microsoft'
 
       - name: Grant execute permission for Gradle wrapper
-        working-directory: backend
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        working-directory: backend
         run: ./gradlew clean build --no-daemon
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: backend/build/libs/*.jar
+          path: '${{ github.workspace }}/build/libs/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write
-      contents: read
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
 
     steps:
       - name: Download artifact from build job
@@ -64,5 +62,4 @@ jobs:
         with:
           app-name: 'seatify-backend'
           slot-name: 'Production'
-          package: 'java-app/*.jar'
-
+          package: '*.jar'
