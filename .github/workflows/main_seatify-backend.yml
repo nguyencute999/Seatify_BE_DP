@@ -25,8 +25,10 @@ jobs:
       - name: Find Gradle wrapper directory
         id: find-gradle
         run: |
-          # find gradlew at repo root or within subfolders (up to depth 3)
-          if [ -f "./gradlew" ]; then
+          # Ưu tiên tìm trong backend/ trước
+          if [ -f "./backend/gradlew" ]; then
+            dir='./backend'
+          elif [ -f "./gradlew" ]; then
             dir='.'
           else
             found=$(find . -maxdepth 3 -type f -name gradlew | head -n 1)
@@ -37,12 +39,15 @@ jobs:
             dir=$(dirname "$found")
           fi
           echo "dir=$dir" >> $GITHUB_OUTPUT
+          echo "Gradle directory found: $dir"
         shell: bash
 
       - name: Show detected project dir
         run: |
           echo "Gradle dir: ${{ steps.find-gradle.outputs.dir }}"
           ls -la ${{ steps.find-gradle.outputs.dir }}
+          echo "Checking gradle wrapper:"
+          ls -la ${{ steps.find-gradle.outputs.dir }}/gradle/wrapper/ || echo "gradle/wrapper not found"
 
       - name: Grant execute permission for Gradle wrapper
         run: chmod +x ${{ steps.find-gradle.outputs.dir }}/gradlew
