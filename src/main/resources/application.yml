@@ -52,7 +52,7 @@ seatify:
     google:
       token-uri: https://oauth2.googleapis.com/token
       userinfo-uri: https://www.googleapis.com/oauth2/v3/userinfo
-      redirect-uri: https://www.seatify.com.vn/api/v1/auth/oauth2/redirect
+      redirect-uri: https://www.seatify.com.vn/oauth2/redirect
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:}
