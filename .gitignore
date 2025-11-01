@@ -3,6 +3,8 @@
 /build/libs
 *.jar
 
+!gradle/wrapper/gradle-wrapper.jar
+
 # Ignore IntelliJ IDEA files
 *.iml
 .idea/
