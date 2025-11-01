@@ -27,7 +27,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew clean build -x test
+        run: ./gradlew build
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -62,3 +62,4 @@ jobs:
           app-name: 'seatify-backend'
           slot-name: 'Production'
           package: '*.jar'
+
