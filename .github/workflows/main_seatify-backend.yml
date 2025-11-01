@@ -21,40 +21,71 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'gradle'
+          cache-dependency-path: './backend/build.gradle'  # Chỉ định đúng path
+
+      - name: Check repository structure
+        run: |
+          echo "Repository structure:"
+          ls -la
+          echo ""
+          echo "Checking for backend folder:"
+          ls -la backend/ 2>/dev/null || echo "backend/ not found"
+          echo ""
+          echo "Checking for gradlew:"
+          ls -la backend/gradlew 2>/dev/null || echo "backend/gradlew not found"
+          ls -la gradlew 2>/dev/null || echo "gradlew not found in root"
+          echo ""
+          echo "Checking for gradle wrapper:"
+          ls -la backend/gradle/wrapper/ 2>/dev/null || echo "backend/gradle/wrapper/ not found"
 
       - name: Find Gradle wrapper directory
         id: find-gradle
         run: |
           # Ưu tiên tìm trong backend/ trước
-          if [ -f "./backend/gradlew" ]; then
+          if [ -f "./backend/gradlew" ] && [ -f "./backend/gradle/wrapper/gradle-wrapper.jar" ]; then
             dir='./backend'
-          elif [ -f "./gradlew" ]; then
+            echo "Found Gradle in backend/"
+          elif [ -f "./gradlew" ] && [ -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
             dir='.'
+            echo "Found Gradle in root"
           else
-            found=$(find . -maxdepth 3 -type f -name gradlew | head -n 1)
+            found=$(find . -maxdepth 4 -type f -name gradlew | head -n 1)
             if [ -z "$found" ]; then
               echo "Gradle wrapper (gradlew) not found in repo" >&2
               exit 1
             fi
             dir=$(dirname "$found")
+            # Kiểm tra gradle-wrapper.jar có tồn tại không
+            if [ ! -f "$dir/gradle/wrapper/gradle-wrapper.jar" ]; then
+              echo "gradle-wrapper.jar not found in $dir/gradle/wrapper/" >&2
+              exit 1
+            fi
+            echo "Found Gradle in $dir"
           fi
           echo "dir=$dir" >> $GITHUB_OUTPUT
-          echo "Gradle directory found: $dir"
+          echo "Gradle directory: $dir"
+          echo "Verifying gradle-wrapper.jar exists:"
+          ls -la "$dir/gradle/wrapper/gradle-wrapper.jar"
         shell: bash
 
       - name: Show detected project dir
         run: |
           echo "Gradle dir: ${{ steps.find-gradle.outputs.dir }}"
+          echo "Contents of Gradle directory:"
           ls -la ${{ steps.find-gradle.outputs.dir }}
-          echo "Checking gradle wrapper:"
-          ls -la ${{ steps.find-gradle.outputs.dir }}/gradle/wrapper/ || echo "gradle/wrapper not found"
+          echo ""
+          echo "Gradle wrapper files:"
+          ls -la ${{ steps.find-gradle.outputs.dir }}/gradle/wrapper/
 
       - name: Grant execute permission for Gradle wrapper
         run: chmod +x ${{ steps.find-gradle.outputs.dir }}/gradlew
 
       - name: Build with Gradle
         working-directory: ${{ steps.find-gradle.outputs.dir }}
-        run: ./gradlew clean build --no-daemon
+        run: |
+          pwd
+          echo "Running from: $(pwd)"
+          ./gradlew clean build --no-daemon
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
