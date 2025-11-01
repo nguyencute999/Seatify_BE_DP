@@ -155,17 +155,17 @@ public class AuthController {
     public ResponseEntity<?> handleGoogleCallback(@RequestParam("code") String code, 
                                                   @RequestParam(value = "state", required = false) String state) {
         try {
-            String redirectUri = "http://localhost:3000/oauth2/redirect";
+            String redirectUri = "https://www.seatify.com.vn/oauth2/redirect";
             var response = authService.exchangeGoogleCodeForToken(code, redirectUri);
             
-            String frontendUrl = "http://localhost:3000";
+            String frontendUrl = "https://www.seatify.com.vn";
             String redirectUrl = frontendUrl + "/oauth2/redirect?token=" + response.accessToken + "&roles=" + String.join(",", response.roles);
             
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", redirectUrl)
                     .build();
         } catch (Exception e) {
-            String frontendUrl = "http://localhost:3000";
+            String frontendUrl = "https://www.seatify.com.vn";
             String errorUrl = frontendUrl + "/oauth2/redirect?error=login_failed&message=" + e.getMessage();
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", errorUrl)

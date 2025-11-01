@@ -36,8 +36,8 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     public void processForgotPassword(ForgotPasswordRequest request) {
         userRepo.findByEmail(request.email()).ifPresent(user -> {
             String token = jwt.generateToken(user.getEmail(), Map.of("reset", true));
-            //Gửi email thật; tạm thời log ra console link FE reset
-            System.out.println("RESET LINK: http://localhost:3000/reset?token=" + token);
+            //Gửi email thật
+            System.out.println("RESET LINK: https://www.seatify.com.vn/reset?token=" + token);
         });
     }
 
