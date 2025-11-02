@@ -83,7 +83,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         // Upload avatar nếu có (code mẫu, cần thực tế upload trả về url)
         String avatarUrl = null;
         if (avatar != null && !avatar.isEmpty()) {
-            // TODO: Xử lý upload ảnh
+
             try {
                 avatarUrl = "upload_url_stub/" + avatar.getOriginalFilename(); // Stub, thay thành url trả về từ service thực tế
                 // Nếu đã có service upload ảnh (ví dụ Cloudinary):

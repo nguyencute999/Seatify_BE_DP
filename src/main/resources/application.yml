@@ -48,6 +48,8 @@ seatify:
   jwt:
     secret: ${SEATIFY_JWT_SECRET:change-me-in-prod-please-change-to-strong-secret}
     expiration-ms: ${SEATIFY_JWT_EXPIRATION_MS:86400000}
+  app:
+    base-url: ${SEATIFY_BASE_URL:https://www.seatify.com.vn}
   oauth2:
     google:
       token-uri: https://oauth2.googleapis.com/token

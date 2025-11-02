@@ -22,11 +22,14 @@ import com.seatify.repository.SeatRepository;
 import com.seatify.repository.UserRepository;
 import com.seatify.util.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
@@ -45,6 +48,9 @@ public class BookingService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final FileUploadUtil fileUploadUtil;
+
+    @Value("${seatify.app.base-url:https://www.seatify.com.vn}")
+    private String baseUrl;
 
     @Transactional
     public UserBookingResponse createBooking(UserBookingRequest request, Long userId) {
@@ -73,16 +79,22 @@ public class BookingService {
         Seat seat = seatRepository.findAvailableSeatByIdAndEventId(request.getSeatId(), request.getEventId())
                 .orElseThrow(() -> new ValidationException("Seat is not available"));
 
-        // Generate QR code
+        // Generate QR code data string
         String qrCodeData = generateQRCodeData(seat.getSeatId(), user.getUserId(), event.getEventId());
-        String qrCodeUrl = generateQRCode(qrCodeData);
+        
+        // Generate QR code URL for automatic check-in (compatible with SanQR and similar apps)
+        String qrCodeUrlForScan = generateQRCodeUrl(qrCodeData);
+        
+        // Generate QR code image
+        String qrCodeImageUrl = generateQRCode(qrCodeUrlForScan);
 
         // Create booking
         Booking booking = Booking.builder()
                 .user(user)
                 .event(event)
                 .seat(seat)
-                .qrCode(qrCodeUrl)
+                .qrCode(qrCodeImageUrl)
+                .qrCodeData(qrCodeData)
                 .bookingTime(LocalDateTime.now())
                 .status(BookingStatus.BOOKED)
                 .build();
@@ -95,7 +107,7 @@ public class BookingService {
         seatRepository.save(seat);
 
         // Send confirmation email
-        sendBookingConfirmationEmail(user, event, seat, qrCodeUrl);
+        sendBookingConfirmationEmail(user, event, seat, qrCodeImageUrl);
 
         return convertToResponse(booking);
     }
@@ -162,6 +174,21 @@ public class BookingService {
     private String generateQRCodeData(Long seatId, Long userId, Long eventId) {
         return String.format("SEATIFY:%d:%d:%d:%s", 
                 seatId, userId, eventId, UUID.randomUUID().toString());
+    }
+
+    /**
+     * Tạo URL cho QR code để check-in tự động
+     * URL này sẽ được encode vào QR code, khi scan sẽ tự động mở và check-in
+     */
+    private String generateQRCodeUrl(String qrCodeData) {
+        try {
+            // Encode QR code data để dùng trong URL
+            String encodedData = URLEncoder.encode(qrCodeData, StandardCharsets.UTF_8);
+            // Tạo URL check-in tự động
+            return String.format("%s/api/v1/attendance/auto-checkin?data=%s", baseUrl, encodedData);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate QR code URL", e);
+        }
     }
 
     private String generateQRCode(String data) {

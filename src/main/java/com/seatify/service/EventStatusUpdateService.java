@@ -37,7 +37,7 @@ public class EventStatusUpdateService {
         LocalDateTime now = LocalDateTime.now();
         log.debug("Checking and updating event statuses at {}", now);
 
-        // 1. Update UPCOMING -> ONGOING: sự kiện đã bắt đầu nhưng chưa kết thúc
+        //Update UPCOMING -> ONGOING: sự kiện đã bắt đầu nhưng chưa kết thúc
         List<Event> upcomingEvents = eventRepository.findByStatus(EventStatus.UPCOMING);
         int ongoingCount = 0;
         for (Event event : upcomingEvents) {
@@ -57,7 +57,7 @@ public class EventStatusUpdateService {
             }
         }
 
-        // 2. Update ONGOING -> FINISHED: sự kiện đã kết thúc
+        //Update ONGOING -> FINISHED: sự kiện đã kết thúc
         List<Event> ongoingEvents = eventRepository.findByStatus(EventStatus.ONGOING);
         int finishedCount = 0;
         for (Event event : ongoingEvents) {

@@ -33,7 +33,7 @@ public class AdminReportServiceImpl implements AdminReportService {
     private final UserRepository userRepository;
     private final AttendanceLogRepository attendanceLogRepository;
     
-    // Giá vé mặc định (có thể cấu hình sau)
+    // Giá vé mặc định
     private static final long DEFAULT_TICKET_PRICE = 50000L; // 50,000 VND
     
     @Override

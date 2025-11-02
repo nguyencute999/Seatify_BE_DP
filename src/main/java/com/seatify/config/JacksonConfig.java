@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Config Jackson để format LocalDateTime trong JSON response
+ * Config Jackson để format LocalDateTime
  * Format: yyyy-MM-dd'T'HH:mm:ss (theo timezone Asia/Ho_Chi_Minh)
  * 
  * @author : Lê Văn Nguyễn - CE181235

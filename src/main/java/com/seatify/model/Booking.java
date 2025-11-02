@@ -38,6 +38,9 @@ public class Booking {
     @Column(name = "qr_code", nullable = false)
     private String qrCode;
 
+    @Column(name = "qr_code_data", length = 500, nullable = false)
+    private String qrCodeData;
+
     @Column(name = "booking_time", nullable = false)
     @Builder.Default
     private LocalDateTime bookingTime = LocalDateTime.now();

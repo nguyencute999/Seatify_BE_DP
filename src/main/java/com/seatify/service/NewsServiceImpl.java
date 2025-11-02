@@ -44,7 +44,7 @@ public class NewsServiceImpl implements NewsService {
                 .content(news.getContent())
                 .thumbnail(news.getThumbnail())
                 .publishedAt(news.getPublishedAt())
-                .createdAt(news.getPublishedAt()) // Dùng publishedAt làm createdAt
+                .createdAt(news.getPublishedAt()) // Dùng publishedAt 
                 .build();
     }
 }

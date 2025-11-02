@@ -45,9 +45,9 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         Long completedEvents = eventRepository.countByStatus(EventStatus.FINISHED);
         Long cancelledEvents = eventRepository.countByStatus(EventStatus.CANCELLED);
         
-        // Tính tổng doanh thu (tạm thời set 0 vì không có trường price trong Booking)
+        // Tính tổng doanh thu 
         // Có thể tính dựa trên số booking nhân với giá vé nếu có
-        Long totalRevenue = 0L; // TODO: Tính toán khi có thông tin giá vé
+        Long totalRevenue = 0L;
         
         return DashboardStatsDTO.builder()
                 .totalUsers(totalUsers)

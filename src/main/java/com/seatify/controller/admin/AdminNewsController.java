@@ -14,6 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * 
+ */
 @RestController
 @RequestMapping("/api/v1/admin/news")
 @RequiredArgsConstructor
@@ -22,46 +25,36 @@ public class AdminNewsController {
     private final AdminNewsService newsService;
     private final FileUploadUtil fileUploadUtil;
 
-    /**
-     * Tạo mới tin tức
-     * 
-     * Cách sử dụng:
-     * 1. Upload ảnh trước: POST /api/v1/admin/news/upload-thumbnail (form-data với field "file")
-     * 2. Lấy URL từ response và dùng trong payload dưới đây
-     * 
-     * Ví dụ payload tạo tin tức:
-     * {
-     *   "title": "Khai mạc sự kiện công nghệ 2025",
-     *   "content": "Sự kiện sẽ diễn ra vào tuần tới với nhiều hoạt động...",
-     *   "thumbnail": "https://res.cloudinary.com/.../news-thumbnails/xyz.jpg",
-     *   "eventId": 1
-     * }
-     */
+   /**
+    * 
+    * @param dto
+    * @return
+    */
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AdminNewsResponseDTO> create(@Valid @RequestBody AdminNewsRequestDTO dto) {
         return ResponseEntity.ok(newsService.create(dto));
     }
 
-    /**
-     * Cập nhật tin tức
-     * 
-     * Cách sử dụng:
-     * 1. Nếu cần upload ảnh mới: POST /api/v1/admin/news/upload-thumbnail
-     * 2. Lấy URL từ response và dùng trong payload dưới đây
-     * 
-     * Ví dụ payload cập nhật tin tức:
-     * {
-     *   "title": "[Update] Khai mạc sự kiện công nghệ 2025",
-     *   "content": "Cập nhật: Bổ sung thêm hoạt động workshop...",
-     *   "thumbnail": "https://res.cloudinary.com/.../news-thumbnails/xyz-v2.jpg",
-     *   "eventId": 2
-     * }
-     */
+ /**
+  * 
+  * @param id
+  * @param dto
+  * @return
+  */
     @PutMapping(value = "/update/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AdminNewsResponseDTO> update(@PathVariable Long id, @Valid @RequestBody AdminNewsRequestDTO dto) {
         return ResponseEntity.ok(newsService.update(id, dto));
     }
 
+    /**
+     * 
+     * @param title
+     * @param page
+     * @param size
+     * @param sortBy
+     * @param desc
+     * @return
+     */
     @GetMapping
     public ResponseEntity<Page<AdminNewsResponseDTO>> getAll(
             @RequestParam(defaultValue = "") String title,
