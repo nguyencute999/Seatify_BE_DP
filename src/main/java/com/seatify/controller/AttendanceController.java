@@ -85,15 +85,15 @@ public class AttendanceController {
      * Endpoint này cho phép check-in tự động khi scan QR code bằng các app như SanQR
      * QR code sẽ chứa URL dạng: https://seatify.com.vn/api/v1/attendance/auto-checkin?data=SEATIFY:...
      * 
-     * Khi mở URL này, hệ thống sẽ tự động xử lý check-in và hiển thị kết quả
+     * Khi scan QR code, trình duyệt sẽ tự động mở URL này và hiển thị kết quả thành công/thất bại
      * 
      * @param data QR code data từ query parameter (format: SEATIFY:seatId:userId:eventId:UUID)
-     * @return HTML page với kết quả check-in hoặc redirect
+     * @return HTML page với kết quả thành công/thất bại
      */
     @Operation(
         summary = "Check-in tự động từ QR code URL",
         description = "API này cho phép check-in tự động khi scan QR code bằng các app như SanQR. " +
-                     "QR code chứa URL, khi mở sẽ tự động xử lý check-in. " +
+                     "QR code chứa URL, khi mở sẽ tự động xử lý check-in và hiển thị kết quả trên trang web. " +
                      "QR code format: SEATIFY:seatId:userId:eventId:UUID"
     )
     @GetMapping("/auto-checkin")
@@ -104,7 +104,7 @@ public class AttendanceController {
             
             // Kiểm tra parameter
             if (data == null || data.isEmpty()) {
-                String html = buildErrorPage("Thiếu thông tin QR code. Vui lòng scan lại mã QR.");
+                String html = buildSimpleResultPage(false, "Thiếu thông tin QR code. Vui lòng scan lại mã QR.");
                 return ResponseEntity.ok()
                         .header("Content-Type", "text/html; charset=UTF-8")
                         .body(html);
@@ -126,26 +126,33 @@ public class AttendanceController {
             // Xử lý check-in
             CheckInResponse response = attendanceService.processCheckIn(request);
             
-            // Trả về HTML page với kết quả
-            String html = buildCheckInResultPage(response);
+            // Trả về HTML page với kết quả thành công
+            String html = buildSimpleResultPage(true, response.getMessage());
             return ResponseEntity.ok()
                     .header("Content-Type", "text/html; charset=UTF-8")
                     .body(html);
         } catch (Exception e) {
             // Log error để debug
             log.error("Error processing auto check-in", e);
-            // Trả về error page
-            String html = buildErrorPage(e.getMessage());
+            // Trả về HTML page với kết quả thất bại
+            String html = buildSimpleResultPage(false, e.getMessage() != null ? e.getMessage() : "Lỗi xử lý check-in");
             return ResponseEntity.ok()
                     .header("Content-Type", "text/html; charset=UTF-8")
                     .body(html);
         }
     }
 
-    private String buildCheckInResultPage(CheckInResponse response) {
-        boolean isCheckIn = response.getAction() == AttendanceAction.CHECK_IN;
-        String icon = isCheckIn ? "✅" : "🔚";
-        String bgColor = isCheckIn ? "#4CAF50" : "#2196F3";
+    /**
+     * Tạo trang HTML đơn giản chỉ hiển thị kết quả thành công/thất bại
+     * 
+     * @param success true nếu thành công, false nếu thất bại
+     * @param message Thông báo kết quả
+     * @return HTML string
+     */
+    private String buildSimpleResultPage(boolean success, String message) {
+        String icon = success ? "✅" : "❌";
+        String title = success ? "Thành công" : "Thất bại";
+        String bgColor = success ? "#4CAF50" : "#f44336";
         
         return String.format("""
             <!DOCTYPE html>
@@ -153,7 +160,7 @@ public class AttendanceController {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Check-in %s - Seatify</title>
+                <title>%s - Seatify</title>
                 <style>
                     * { margin: 0; padding: 0; box-sizing: border-box; }
                     body {
@@ -169,7 +176,7 @@ public class AttendanceController {
                         background: white;
                         border-radius: 20px;
                         box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-                        max-width: 500px;
+                        max-width: 400px;
                         width: 100%%;
                         padding: 40px;
                         text-align: center;
@@ -177,10 +184,11 @@ public class AttendanceController {
                     .icon {
                         font-size: 80px;
                         margin-bottom: 20px;
+                        animation: pulse 0.6s ease-in-out;
                     }
                     h1 {
                         color: #333;
-                        margin-bottom: 10px;
+                        margin-bottom: 20px;
                         font-size: 28px;
                     }
                     .status {
@@ -193,43 +201,18 @@ public class AttendanceController {
                         margin: 20px 0;
                         font-size: 18px;
                     }
-                    .info {
-                        background: #f5f5f5;
-                        border-radius: 10px;
-                        padding: 20px;
-                        margin: 20px 0;
-                        text-align: left;
-                    }
-                    .info-row {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 10px 0;
-                        border-bottom: 1px solid #e0e0e0;
-                    }
-                    .info-row:last-child {
-                        border-bottom: none;
-                    }
-                    .label {
-                        color: #666;
-                        font-weight: 600;
-                    }
-                    .value {
-                        color: #333;
-                        font-weight: bold;
-                    }
                     .message {
                         margin-top: 20px;
                         padding: 15px;
-                        background: #e3f2fd;
-                        border-left: 4px solid %s;
-                        border-radius: 5px;
-                        color: #1976d2;
-                        font-size: 14px;
+                        background: %s;
+                        border-radius: 10px;
+                        color: %s;
+                        font-size: 16px;
+                        line-height: 1.5;
                     }
-                    .timestamp {
-                        margin-top: 15px;
-                        color: #999;
-                        font-size: 12px;
+                    @keyframes pulse {
+                        0%%, 100%% { transform: scale(1); }
+                        50%% { transform: scale(1.1); }
                     }
                     @keyframes slideIn {
                         from {
@@ -244,17 +227,6 @@ public class AttendanceController {
                     .container {
                         animation: slideIn 0.5s ease-out;
                     }
-                    @keyframes pulse {
-                        0%%, 100%% {
-                            transform: scale(1);
-                        }
-                        50%% {
-                            transform: scale(1.1);
-                        }
-                    }
-                    .icon {
-                        animation: pulse 0.6s ease-in-out;
-                    }
                 </style>
             </head>
             <body>
@@ -262,24 +234,12 @@ public class AttendanceController {
                     <div class="icon">%s</div>
                     <h1>%s</h1>
                     <div class="status">%s</div>
-                    <div class="info">
-                        <div class="info-row">
-                            <span class="label">Sự kiện:</span>
-                            <span class="value">%s</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Ghế:</span>
-                            <span class="value">%s</span>
-                        </div>
-                    </div>
                     <div class="message">%s</div>
-                    <div class="timestamp">Thời gian: %s</div>
                 </div>
                 <script>
-                    // Phát âm thanh thành công
-                    function playSuccessSound() {
+                    // Phát âm thanh beep khi trang load
+                    function playBeepSound() {
                         try {
-                            // Tạo audio context và phát âm thanh beep
                             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                             const oscillator = audioContext.createOscillator();
                             const gainNode = audioContext.createGain();
@@ -287,13 +247,34 @@ public class AttendanceController {
                             oscillator.connect(gainNode);
                             gainNode.connect(audioContext.destination);
                             
-                            oscillator.frequency.value = %s; // Tần số (Hz)
+                            // Tần số và thời gian khác nhau cho thành công/thất bại
+                            oscillator.frequency.value = %s; // Hz
                             oscillator.type = 'sine';
-                            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                            
+                            // Gain envelope để tạo âm thanh beep mượt mà
+                            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+                            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + %s);
                             
                             oscillator.start(audioContext.currentTime);
-                            oscillator.stop(audioContext.currentTime + 0.3);
+                            oscillator.stop(audioContext.currentTime + %s);
+                            
+                            // Nếu thành công, phát thêm một beep ngắn
+                            if (%s) {
+                                setTimeout(() => {
+                                    const osc2 = audioContext.createOscillator();
+                                    const gain2 = audioContext.createGain();
+                                    osc2.connect(gain2);
+                                    gain2.connect(audioContext.destination);
+                                    osc2.frequency.value = %s + 200;
+                                    osc2.type = 'sine';
+                                    gain2.gain.setValueAtTime(0, audioContext.currentTime + 0.15);
+                                    gain2.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.16);
+                                    gain2.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.25);
+                                    osc2.start(audioContext.currentTime + 0.15);
+                                    osc2.stop(audioContext.currentTime + 0.25);
+                                }, 150);
+                            }
                         } catch (e) {
                             console.log('Cannot play sound:', e);
                         }
@@ -302,121 +283,35 @@ public class AttendanceController {
                     // Rung điện thoại (nếu hỗ trợ)
                     function vibrate() {
                         if ('vibrate' in navigator) {
-                            navigator.vibrate([200, 100, 200]); // Rung 200ms, nghỉ 100ms, rung 200ms
+                            const pattern = %s;
+                            navigator.vibrate(pattern);
                         }
                     }
                     
-                    // Browser notification
-                    function showNotification() {
-                        if ('Notification' in window && Notification.permission === 'granted') {
-                            new Notification('%s', {
-                                body: '%s - Ghế: %s',
-                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%s"/><text x="50" y="65" font-size="50" text-anchor="middle" fill="white">%s</text></svg>',
-                                badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%s"/></svg>',
-                                tag: 'seatify-checkin',
-                                requireInteraction: false
-                            });
-                        } else if ('Notification' in window && Notification.permission !== 'denied') {
-                            Notification.requestPermission().then(function(permission) {
-                                if (permission === 'granted') {
-                                    showNotification();
-                                }
-                            });
-                        }
-                    }
-                    
-                    // Chạy tất cả tín hiệu khi trang load
+                    // Chạy khi trang load
                     window.addEventListener('load', function() {
-                        playSuccessSound();
+                        playBeepSound();
                         vibrate();
-                        showNotification();
                     });
                 </script>
             </body>
             </html>
             """,
-            isCheckIn ? "thành công" : "thoát thành công",
+            title,
             bgColor,
-            bgColor,
+            success ? "#e8f5e9" : "#ffebee",
+            success ? "#2e7d32" : "#c62828",
             icon,
-            isCheckIn ? "Check-in thành công!" : "Check-out thành công!",
-            isCheckIn ? "Đã vào" : "Đã ra",
-            response.getEventName(),
-            response.getSeatLabel(),
-            response.getMessage(),
-            response.getTimestamp() != null ? response.getTimestamp().toString() : "N/A",
-            // Sound frequency (Hz) - 800Hz cho success, 600Hz cho checkout
-            isCheckIn ? 800 : 600,
-            // Notification title
-            isCheckIn ? "✅ Check-in thành công!" : "🔚 Check-out thành công!",
-            // Notification body
-            response.getEventName(),
-            response.getSeatLabel(),
-            // Notification icon color
-            bgColor,
-            // Notification icon emoji
-            icon
-        );
-    }
-
-    private String buildErrorPage(String errorMessage) {
-        return String.format("""
-            <!DOCTYPE html>
-            <html lang="vi">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Lỗi Check-in - Seatify</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body {
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 20px;
-                    }
-                    .container {
-                        background: white;
-                        border-radius: 20px;
-                        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-                        max-width: 500px;
-                        width: 100%%;
-                        padding: 40px;
-                        text-align: center;
-                    }
-                    .icon {
-                        font-size: 80px;
-                        margin-bottom: 20px;
-                    }
-                    h1 {
-                        color: #d32f2f;
-                        margin-bottom: 10px;
-                        font-size: 28px;
-                    }
-                    .error-message {
-                        margin-top: 20px;
-                        padding: 15px;
-                        background: #ffebee;
-                        border-left: 4px solid #d32f2f;
-                        border-radius: 5px;
-                        color: #c62828;
-                        font-size: 14px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="icon">❌</div>
-                    <h1>Lỗi Check-in</h1>
-                    <div class="error-message">%s</div>
-                </div>
-            </body>
-            </html>
-            """,
-            errorMessage
+            title,
+            success ? "THÀNH CÔNG" : "THẤT BẠI",
+            message,
+            // Sound parameters
+            success ? 800 : 400, // frequency (Hz) - cao hơn cho success, thấp hơn cho failure
+            success ? 0.2 : 0.3, // duration (seconds)
+            success ? 0.2 : 0.3, // stop time
+            success, // isSuccess
+            success ? 800 : 400, // second beep frequency
+            success ? "[200, 50, 200]" : "[300, 100, 300]" // vibration pattern - array format for JavaScript
         );
     }
 }
