@@ -49,7 +49,7 @@ public class BookingService {
     private final EmailService emailService;
     private final FileUploadUtil fileUploadUtil;
 
-    @Value("${seatify.app.base-url:https://www.seatify.com.vn}")
+    @Value("${seatify.app.base-url:seatify-backend.azurewebsites.net}")
     private String baseUrl;
 
     @Transactional
