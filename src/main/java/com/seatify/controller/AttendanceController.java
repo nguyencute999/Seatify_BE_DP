@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * 
  * Author: Lê Văn Nguyễn - CE181235
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/attendance")
 @RequiredArgsConstructor
@@ -95,11 +97,31 @@ public class AttendanceController {
                      "QR code format: SEATIFY:seatId:userId:eventId:UUID"
     )
     @GetMapping("/auto-checkin")
-    public ResponseEntity<?> autoCheckIn(@RequestParam("data") String data) {
+    public ResponseEntity<?> autoCheckIn(@RequestParam(value = "data", required = false) String data) {
         try {
+            // Log để debug
+            log.info("Auto check-in request received. Data: {}", data);
+            
+            // Kiểm tra parameter
+            if (data == null || data.isEmpty()) {
+                String html = buildErrorPage("Thiếu thông tin QR code. Vui lòng scan lại mã QR.");
+                return ResponseEntity.ok()
+                        .header("Content-Type", "text/html; charset=UTF-8")
+                        .body(html);
+            }
+            
+            // Decode URL nếu cần (đề phòng double encoding)
+            String decodedData = data;
+            try {
+                decodedData = java.net.URLDecoder.decode(data, java.nio.charset.StandardCharsets.UTF_8.name());
+            } catch (Exception e) {
+                // Nếu không decode được, dùng data gốc
+                log.warn("Could not decode data, using original: {}", data);
+            }
+            
             // Tạo request từ query parameter
             CheckInRequest request = new CheckInRequest();
-            request.setQrCodeData(data);
+            request.setQrCodeData(decodedData);
             
             // Xử lý check-in
             CheckInResponse response = attendanceService.processCheckIn(request);
@@ -110,6 +132,8 @@ public class AttendanceController {
                     .header("Content-Type", "text/html; charset=UTF-8")
                     .body(html);
         } catch (Exception e) {
+            // Log error để debug
+            log.error("Error processing auto check-in", e);
             // Trả về error page
             String html = buildErrorPage(e.getMessage());
             return ResponseEntity.ok()
