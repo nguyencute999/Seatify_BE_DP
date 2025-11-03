@@ -155,7 +155,7 @@ public class AuthController {
     public ResponseEntity<?> handleGoogleCallback(@RequestParam("code") String code, 
                                                   @RequestParam(value = "state", required = false) String state) {
         try {
-            String redirectUri = "https://seatify-backend.azurewebsites.net/api/v1/auth/oauth2/callback/google";
+            String redirectUri = "https://seatify-backend.azurewebsites.net/oauth2/redirect";
             var response = authService.exchangeGoogleCodeForToken(code, redirectUri);
             
             String frontendUrl = "https://www.seatify.com.vn";

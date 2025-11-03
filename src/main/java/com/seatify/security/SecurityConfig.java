@@ -46,8 +46,11 @@ public class SecurityConfig {
                         "/oauth2/**",
                         "/swagger-ui/**", "/v3/api-docs/**"
                 ).permitAll()
-                // Explicitly allow Google OAuth2 callback endpoint
+                // Explicitly allow Google OAuth2 flow endpoints
+                .requestMatchers(HttpMethod.GET, "/api/v1/auth/google-login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/google/code").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/oauth2/callback/google").permitAll()
+                .requestMatchers(HttpMethod.GET, "/oauth2/redirect").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN")
                 .anyRequest().authenticated()

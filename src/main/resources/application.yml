@@ -41,7 +41,7 @@ spring:
               - openid
               - email
               - profile
-            redirect-uri: "https://seatify-backend.azurewebsites.net/api/v1/auth/oauth2/callback/google"
+            redirect-uri: "https://seatify-backend.azurewebsites.net/oauth2/redirect"
             client-name: Seatify Google Login
 
 seatify:
@@ -54,7 +54,7 @@ seatify:
     google:
       token-uri: https://oauth2.googleapis.com/token
       userinfo-uri: https://www.googleapis.com/oauth2/v3/userinfo
-      redirect-uri: https://seatify-backend.azurewebsites.net/api/v1/auth/oauth2/callback/google
+      redirect-uri: https://seatify-backend.azurewebsites.net/oauth2/redirect
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:}
