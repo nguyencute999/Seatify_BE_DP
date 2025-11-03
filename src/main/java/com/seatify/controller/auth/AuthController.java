@@ -155,7 +155,7 @@ public class AuthController {
     public ResponseEntity<?> handleGoogleCallback(@RequestParam("code") String code, 
                                                   @RequestParam(value = "state", required = false) String state) {
         try {
-            String redirectUri = "https://www.seatify.com.vn/oauth2/redirect";
+            String redirectUri = "https://www.seatify.com.vn/api/v1/auth/oauth2/callback/google";
             var response = authService.exchangeGoogleCodeForToken(code, redirectUri);
             
             String frontendUrl = "https://www.seatify.com.vn";
